@@ -10,21 +10,10 @@ const PORT = process.env.PORT || 3000;
 // Middleware setup
 app.use(cors());
 app.use(bodyParser.json());
+
+// Serve static files from the same directory as this script.
+// This is crucial for serving index.html, CSS, and client-side JS.
 app.use(express.static(path.join(__dirname)));
-
-// In-memory data stores (replace with a database for production)
-const scripts = {};
-const keys = {}; // Stores user keys and their data
-const plans = {
-    '1-month': 30 * 24 * 60 * 60 * 1000
-};
-
-// Frontend routes to serve the HTML file
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.get("/panel", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.get('/statues', (req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.get("/plans", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.get("/about", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
 // API to get a one-time free key
 app.post("/api/free-key", (req, res) => {
@@ -33,6 +22,13 @@ app.post("/api/free-key", (req, res) => {
         return res.status(400).json({ error: 'User ID is required.' });
     }
 
+    // In-memory data stores (replace with a database for production)
+    const scripts = {};
+    const keys = {}; // Stores user keys and their data
+    const plans = {
+        '1-month': 30 * 24 * 60 * 60 * 1000
+    };
+    
     // Check if the user already has a key (prevent multiple free keys)
     for (const key in keys) {
         if (keys[key].userId === userId) {
@@ -49,6 +45,9 @@ app.post("/api/free-key", (req, res) => {
 
 // API to check a key's validity
 app.post('/api/check-key', (req, res) => {
+    // In-memory data stores (replace with a database for production)
+    const scripts = {};
+    const keys = {}; // Stores user keys and their data
     const { key } = req.body;
     const keyData = keys[key];
 
@@ -61,6 +60,9 @@ app.post('/api/check-key', (req, res) => {
 
 // API to create a new script
 app.post("/api/scripts", (req, res) => {
+    // In-memory data stores (replace with a database for production)
+    const scripts = {};
+    const keys = {}; // Stores user keys and their data
     const { code, isPaid, key } = req.body;
 
     // Check for required fields
@@ -91,6 +93,8 @@ app.post("/api/scripts", (req, res) => {
 
 // API to get all scripts
 app.get("/api/scripts", (req, res) => {
+    // In-memory data stores (replace with a database for production)
+    const scripts = {};
     // In a real app, you would filter by user
     const allScripts = Object.values(scripts).map(script => ({
         id: script.id,
@@ -102,6 +106,8 @@ app.get("/api/scripts", (req, res) => {
 
 // API to delete a script
 app.delete('/api/scripts/:id', (req, res) => {
+    // In-memory data stores (replace with a database for production)
+    const scripts = {};
     const { id } = req.params;
     if (scripts[id]) {
         delete scripts[id];
@@ -114,6 +120,8 @@ app.delete('/api/scripts/:id', (req, res) => {
 
 // API to get user lists (whitelist/blacklist)
 app.get("/api/users/:id", (req, res) => {
+    // In-memory data stores (replace with a database for production)
+    const scripts = {};
     const { id } = req.params;
     const script = scripts[id];
     if (script) {
@@ -125,6 +133,8 @@ app.get("/api/users/:id", (req, res) => {
 
 // API to add user to a list
 app.post('/api/users/:id/:listType', (req, res) => {
+    // In-memory data stores (replace with a database for production)
+    const scripts = {};
     const { id, listType } = req.params;
     const { userId } = req.body;
     const script = scripts[id];
@@ -142,6 +152,8 @@ app.post('/api/users/:id/:listType', (req, res) => {
 
 // API to remove user from a list
 app.delete("/api/users/:id/:listType", (req, res) => {
+    // In-memory data stores (replace with a database for production)
+    const scripts = {};
     const { id, listType } = req.params;
     const { userId } = req.body;
     const script = scripts[id];
@@ -160,6 +172,9 @@ app.delete("/api/users/:id/:listType", (req, res) => {
 
 // Endpoint for Roblox execution
 app.get("/raw/:id", (req, res) => {
+    // In-memory data stores (replace with a database for production)
+    const scripts = {};
+    const keys = {}; // Stores user keys and their data
     const { id } = req.params;
     const { key, userId } = req.query;
     const script = scripts[id];
@@ -184,6 +199,12 @@ app.get("/raw/:id", (req, res) => {
     script.executions++;
     res.set("Content-Type", "text/plain");
     res.send(script.code);
+});
+
+// This catch-all route will serve your index.html for any request that doesn't match an API or a static file.
+// This is a typical setup for a single-page application where client-side routing is used.
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Start the server
